@@ -1,0 +1,66 @@
+<html xmlns:tomboy="http://beatniksoftware.com/tomboy" xmlns:link="http://beatniksoftware.com/tomboy/link" xmlns:size="http://beatniksoftware.com/tomboy/size"><head><META http-equiv="Content-Type" content="text/html; charset=utf-8"><title>external folder中linux kernel header的作用</title><style type="text/css">
+        
+	body {  }
+	h1 { font-size: xx-large;
+     	     font-weight: bold;
+     	     border-bottom: 1px solid black; }
+	div.note {
+		   position: relative;
+		   display: block;
+		   padding: 5pt;
+		   margin: 5pt; 
+		   white-space: -moz-pre-wrap; /* Mozilla */
+ 	      	   white-space: -pre-wrap;     /* Opera 4 - 6 */
+ 	      	   white-space: -o-pre-wrap;   /* Opera 7 */
+ 	      	   white-space: pre-wrap;      /* CSS3 */
+ 	      	   word-wrap: break-word;      /* IE 5.5+ */ }
+	</style></head><body><div class="note" id="external folder中linux kernel header的作用"><a name="external folder中linux kernel header的作用"></a><h1>external folder中linux kernel header的作用</h1>
+在Linux中，有一个external/kernel-headers/original，这个文件夹中有很多linux的头文件，与kernel/include/linux有很多重复的文件。
+
+<b>1、Android external folder</b>
+
+External refers to external open source libraries. That means libraries that the Android platform depend upon but that are not primarily developed and maintained by the Android open source project. Typical examples are webkit for the browser, FreeType for fonts, SqlLite for databases and so on. As more features are added to Android, more of these libraries are included in external.
+
+external folder是外部的open source lib，这些lib是android依赖的，但是主要的开发和维护又不是android来做
+
+<a style="color:#3465A4" href="http://stackoverflow.com/questions/10477565/android-external-folder-functionality">http://stackoverflow.com/questions/10477565/android-external-folder-functionality</a>
+
+<b>2,external/kernel-headers/original</b>
+(external/kernel-headers/original/README.TXT)
+这个文件夹里的头文件是Bionic来用生成一个干净的user-land(user space)头文件。基于GPL2+。
+
+
+<b>3、Bionic</b>
+
+
+Bionic libc是BSD standard C library发展而来，最早是Google为Android开发。作用主要有三个：
+a，BSD license: 通过BSD license，Android程序就和GPL分隔开来。
+b，Bionic比GNU C Library要小的多。
+c，Bionic的速度更快。
+
+Bionic也缺少很多完整的libc的特性，比如宽字符和C++的异常处理。一些函数也没有实现。
+
+(<a style="color:#3465A4" href="http://discuz-android.blogspot.com/2008/10/google-android-native-libc-bionic.html">http://discuz-android.blogspot.com/2008/10/google-android-native-libc-bionic.html</a>)
+
+
+HAL层，以及除了kernel意外的任意用到的C头文件，都是bionic中的。
+./core/pathmap.mk，pathmap_INCL ：=    libc:bionic/libc/include 
+（<a style="color:#3465A4" href="http://www.linuxidc.com/Linux/2011-03/33672.htm">http://www.linuxidc.com/Linux/2011-03/33672.htm</a> )
+
+Android编译环境所用的交叉编译工具链是prebuilt/linux-x86/toolchain/arm-eabi-4.2.1/bin/arm-eabi-gcc，-I和-L参数指定了所用的C库头文件和动态库文件路径分别是bionic/libc/include和out/target/product/generic/obj/lib
+(<a style="color:#3465A4" href="http://www.360doc.com/content/09/0624/17/36491_4018938.shtml">http://www.360doc.com/content/09/0624/17/36491_4018938.shtml</a>
+
+kernel中用的头文件在kernel/include中。user space用的头文件在bionic下。
+
+<b>4，Bionic kernel header</b>
+(bionic/libc/kernel/README.TXT）
+Bionic有一套干净的Linux头文件，这些头文件是通过bionic/libc/kernel/tools解析一份原始的，没有修改过的linux头文件生成的，这份头文件就在<b>external/kernel-headers/original</b>。
+干净的头文件只包括类型和宏定义，不过处于效率的考虑，不会生成一些静态内联函数。
+这些生成的头文件可以用于编译C++，C，也能够按照ANSI模式编译（linux kernel中用到了大量GNU扩展）。
+生成头文件的过程是：
+*external/kernel-headers/original
+包含通常linux kernel source tree中的include目录。这里仅仅只应该包含android依赖的kernel头文件。
+
+*bionic/libc/kernel/common
+包含平台无关的头文件。
+</div></body></html>
